@@ -6,7 +6,7 @@ class Varasto:
             # virheellinen, nollataan
             self.tilavuus = 0.0
 
-        if alku_saldo > 0.0:
+        if alku_saldo < 0.0:
             # virheellinen, nollataan
             self.saldo = 0.0
         elif alku_saldo <= tilavuus:

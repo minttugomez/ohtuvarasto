@@ -1,0 +1,10 @@
+[FORMAT]
+max-line-length = 80
+indent-string = "    "
+
+[REFACTORING]
+max-nested-blocks = 2
+
+[DESIGN]
+max-statements = 10
+max-attributes = 5

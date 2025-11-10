@@ -1,6 +1,7 @@
 """ docstring """
 from varasto import Varasto
 
+# pylint: disable=too-many-statements
 def main():
     """ docstring """
     mehua = Varasto(100.0)

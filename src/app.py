@@ -7,13 +7,32 @@ app = Flask(__name__)
 
 # In-memory storage for warehouses
 warehouses = {}
-WAREHOUSE_COUNTER = [0]  # Using a list to avoid global statement
 
 
-def get_next_id():
-    """ Generate next warehouse ID """
-    WAREHOUSE_COUNTER[0] += 1
-    return WAREHOUSE_COUNTER[0]
+class Counter:
+    """ Simple counter class to avoid global statement """
+    def __init__(self):
+        self.value = 0
+
+    def next_id(self):
+        """ Get next ID """
+        self.value += 1
+        return self.value
+
+    def reset(self):
+        """ Reset counter (for testing) """
+        self.value = 0
+
+
+warehouse_counter = Counter()
+
+
+def safe_float(value, default=0.0):
+    """ Safely convert value to float, returning default if invalid """
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
 
 
 @app.route('/')
@@ -34,9 +53,9 @@ def index():
 @app.route('/warehouse/create', methods=['POST'])
 def create_warehouse():
     """ Create a new warehouse """
-    tilavuus = float(request.form.get('tilavuus', 10))
-    alku_saldo = float(request.form.get('alku_saldo', 0))
-    wid = get_next_id()
+    tilavuus = safe_float(request.form.get('tilavuus'), 10.0)
+    alku_saldo = safe_float(request.form.get('alku_saldo'), 0.0)
+    wid = warehouse_counter.next_id()
     warehouses[wid] = Varasto(tilavuus, alku_saldo)
     return redirect(url_for('index'))
 
@@ -47,7 +66,7 @@ def edit_warehouse(wid):
     if wid not in warehouses:
         return redirect(url_for('index'))
 
-    new_tilavuus = float(request.form.get('tilavuus', 10))
+    new_tilavuus = safe_float(request.form.get('tilavuus'), 10.0)
     current = warehouses[wid]
     # Create new warehouse with same balance, new capacity
     warehouses[wid] = Varasto(new_tilavuus, current.saldo)
@@ -68,7 +87,7 @@ def add_to_warehouse(wid):
     if wid not in warehouses:
         return redirect(url_for('index'))
 
-    maara = float(request.form.get('maara', 0))
+    maara = safe_float(request.form.get('maara'), 0.0)
     warehouses[wid].lisaa_varastoon(maara)
     return redirect(url_for('index'))
 
@@ -79,7 +98,7 @@ def remove_from_warehouse(wid):
     if wid not in warehouses:
         return redirect(url_for('index'))
 
-    maara = float(request.form.get('maara', 0))
+    maara = safe_float(request.form.get('maara'), 0.0)
     warehouses[wid].ota_varastosta(maara)
     return redirect(url_for('index'))
 
@@ -100,4 +119,6 @@ def get_warehouse_details(wid):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    import os
+    debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_mode)

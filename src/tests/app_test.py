@@ -1,7 +1,7 @@
 """ Tests for Flask web application """
 
 import unittest
-from app import app, warehouses, WAREHOUSE_COUNTER
+from app import app, warehouses, warehouse_counter, safe_float
 
 
 class TestApp(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestApp(unittest.TestCase):
         app.config['TESTING'] = True
         self.client = app.test_client()
         warehouses.clear()
-        WAREHOUSE_COUNTER[0] = 0
+        warehouse_counter.reset()
 
     def test_index_empty(self):
         """ Test index page with no warehouses """
@@ -135,3 +135,28 @@ class TestApp(unittest.TestCase):
         response = self.client.post(
             '/warehouse/999/delete', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_safe_float_valid_input(self):
+        """ Test safe_float with valid input """
+        self.assertAlmostEqual(safe_float('100'), 100.0)
+        self.assertAlmostEqual(safe_float('3.14'), 3.14)
+        self.assertAlmostEqual(safe_float(50), 50.0)
+
+    def test_safe_float_invalid_input(self):
+        """ Test safe_float with invalid input returns default """
+        self.assertAlmostEqual(safe_float('invalid'), 0.0)
+        self.assertAlmostEqual(safe_float('invalid', 10.0), 10.0)
+        self.assertAlmostEqual(safe_float(None), 0.0)
+        self.assertAlmostEqual(safe_float(''), 0.0)
+
+    def test_create_warehouse_with_invalid_input(self):
+        """ Test creating warehouse with invalid input uses defaults """
+        response = self.client.post('/warehouse/create', data={
+            'tilavuus': 'invalid',
+            'alku_saldo': 'also_invalid'
+        }, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(warehouses), 1)
+        # Should use defaults
+        self.assertAlmostEqual(warehouses[1].tilavuus, 10.0)
+        self.assertAlmostEqual(warehouses[1].saldo, 0.0)

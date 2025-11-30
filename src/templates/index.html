@@ -273,6 +273,17 @@
 
             details.classList.add('active');
         }
+
+        // Auto-select warehouse on page load if selected_id is provided
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if selected_id %}
+            const select = document.getElementById('warehouse-select');
+            if (select) {
+                select.value = '{{ selected_id }}';
+                showWarehouseDetails();
+            }
+            {% endif %}
+        });
     </script>
 </body>
 </html>

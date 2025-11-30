@@ -38,6 +38,7 @@ def safe_float(value, default=0.0):
 @app.route('/')
 def index():
     """ Main page showing all warehouses """
+    selected_id = request.args.get('selected', type=int)
     warehouse_list = [
         {
             'id': wid,
@@ -47,7 +48,8 @@ def index():
         }
         for wid, w in warehouses.items()
     ]
-    return render_template('index.html', warehouses=warehouse_list)
+    return render_template('index.html', warehouses=warehouse_list,
+                           selected_id=selected_id)
 
 
 @app.route('/warehouse/create', methods=['POST'])
@@ -57,7 +59,7 @@ def create_warehouse():
     alku_saldo = safe_float(request.form.get('alku_saldo'), 0.0)
     wid = warehouse_counter.next_id()
     warehouses[wid] = Varasto(tilavuus, alku_saldo)
-    return redirect(url_for('index'))
+    return redirect(url_for('index', selected=wid))
 
 
 @app.route('/warehouse/<int:wid>/edit', methods=['POST'])
@@ -70,7 +72,7 @@ def edit_warehouse(wid):
     current = warehouses[wid]
     # Create new warehouse with same balance, new capacity
     warehouses[wid] = Varasto(new_tilavuus, current.saldo)
-    return redirect(url_for('index'))
+    return redirect(url_for('index', selected=wid))
 
 
 @app.route('/warehouse/<int:wid>/delete', methods=['POST'])
@@ -89,7 +91,7 @@ def add_to_warehouse(wid):
 
     maara = safe_float(request.form.get('maara'), 0.0)
     warehouses[wid].lisaa_varastoon(maara)
-    return redirect(url_for('index'))
+    return redirect(url_for('index', selected=wid))
 
 
 @app.route('/warehouse/<int:wid>/remove', methods=['POST'])
@@ -100,7 +102,7 @@ def remove_from_warehouse(wid):
 
     maara = safe_float(request.form.get('maara'), 0.0)
     warehouses[wid].ota_varastosta(maara)
-    return redirect(url_for('index'))
+    return redirect(url_for('index', selected=wid))
 
 
 @app.route('/api/warehouse/<int:wid>')
